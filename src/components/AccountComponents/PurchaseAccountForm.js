@@ -22,15 +22,6 @@ function PurchaseAccountForm({ method, title, account }) {
 
   return (
     <React.Fragment>
-      {data && data.errors && (
-        <ul>
-          {Object.values(data.errors).map((err) => (
-            <li key={err}>{err}</li>
-          ))}
-        </ul>
-      )}
-      {data && data.message && <p>{data.message}</p>}
-
       <Form method={method}>
         <div className="border-b border-gray-900/10 pb-12">
           <h2 className="text-base font-semibold leading-7 text-gray-900">
@@ -39,6 +30,14 @@ function PurchaseAccountForm({ method, title, account }) {
           <p className="mt-1 text-sm leading-6 text-gray-600">
             Input details here.
           </p>
+          {data && data.errors && (
+            <ul>
+              {Object.values(data.errors).map((err) => (
+                <li key={err}>{err}</li>
+              ))}
+            </ul>
+          )}
+          {data && data.message && <p>{data.message}</p>}
 
           <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
             <div className="sm:col-span-2 sm:col-start-1">
@@ -170,9 +169,12 @@ export async function action({ request, params }) {
     if (response.status === 409) {
       return response;
     }
+    if (response.status === 400) {
+      return response;
+    }
 
     if (!response.ok) {
-      throw json({ message: "Failed to save the account" }, { status: 500 });
+      throw json({ message: "Failed to save an account" }, { status: 500 });
     }
 
     return redirect("/account/purchase");
@@ -180,7 +182,7 @@ export async function action({ request, params }) {
     const id = params.id;
     url = "/purchase/account/" + id;
     const response = await fetch(url, {
-      method: method,
+      method: "PATCH",
       headers: {
         "Content-Type": "application/json",
         Authorization: "Bearer " + token,
@@ -188,14 +190,9 @@ export async function action({ request, params }) {
       },
       body: JSON.stringify(accountData),
     });
-    if (response.status === 409) {
+    if (response.status === 400) {
       return response;
     }
-
-    if (!response.ok) {
-      throw json({ message: "Failed to update the account" }, { status: 500 });
-    }
-
     return redirect("/account/purchase");
   }
 }
